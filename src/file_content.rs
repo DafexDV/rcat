@@ -3,14 +3,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(crate) enum Content {
-    Lines(Vec<String>),
-    Error(String),
-}
-
 pub(crate) struct FileContent {
     path: PathBuf,
-    content: Content,
+    content: Result<Vec<String>, String>,
+}
+
+pub(crate) struct ContentReport {
+    items: Vec<FileContent>,
 }
 
 impl FileContent {
@@ -18,18 +17,27 @@ impl FileContent {
         &self.path
     }
 
-    pub(crate) fn content(&self) -> &Content {
-        &self.content
+    pub(crate) fn content(&self) -> Result<&Vec<String>, &str> {
+        match &self.content {
+            Ok(lines) => Ok(lines),
+            Err(error) => Err(error),
+        }
     }
 }
 
-pub(crate) fn read_file_contents(files: &Vec<String>) -> Vec<FileContent> {
-    let mut file_contents: Vec<FileContent> = Vec::new();
+impl ContentReport {
+    pub(crate) fn items(&self) -> &[FileContent] {
+        &self.items
+    }
+}
+
+pub(crate) fn read_file_contents(files: &Vec<String>) -> ContentReport {
+    let mut items: Vec<FileContent> = Vec::new();
 
     for file in files {
         let path = Path::new(file);
 
-        let content: Content;
+        let content: Result<Vec<String>, String>;
 
         if path.exists() {
             match fs::read_to_string(path) {
@@ -40,21 +48,21 @@ pub(crate) fn read_file_contents(files: &Vec<String>) -> Vec<FileContent> {
                         lines.push(l.to_owned());
                     }
 
-                    content = Content::Lines(lines);
+                    content = Ok(lines);
                 }
                 Err(error) => {
-                    content = Content::Error(error.to_string());
+                    content = Err(error.to_string());
                 }
             }
         } else {
-            content = Content::Error("No such file or directory".to_owned());
+            content = Err("No such file or directory".to_owned());
         }
 
-        file_contents.push(FileContent {
+        items.push(FileContent {
             path: path.into(),
             content,
         });
     }
 
-    file_contents
+    ContentReport { items }
 }

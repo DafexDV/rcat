@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use crate::file_content::{Content, FileContent, read_file_contents};
+use crate::file_content::{ContentReport, read_file_contents};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -29,10 +29,10 @@ pub fn init_cli() {
         files,
     } = cli;
 
-    let file_contents = read_file_contents(&files);
+    let content_report = read_file_contents(&files);
 
-    show_file_contents(
-        &file_contents,
+    show_content_report(
+        &content_report,
         ShowOptions {
             show_number: number,
             show_ends,
@@ -40,14 +40,14 @@ pub fn init_cli() {
     );
 }
 
-fn show_file_contents(file_contents: &Vec<FileContent>, options: ShowOptions) {
+fn show_content_report(content_report: &ContentReport, options: ShowOptions) {
     // global line number because the original grep
     // doesn't reset the line count on multiple file
     // read
     let mut line_number = 0;
-    for file_content in file_contents {
-        match &file_content.content() {
-            Content::Lines(lines) => {
+    for file_content in content_report.items() {
+        match file_content.content() {
+            Ok(lines) => {
                 for line in lines.iter() {
                     let mut modified_line: String = line.clone();
                     if options.show_ends {
@@ -62,7 +62,7 @@ fn show_file_contents(file_contents: &Vec<FileContent>, options: ShowOptions) {
                     print!("\n");
                 }
             }
-            Content::Error(error) => {
+            Err(error) => {
                 println!("rcat: {}: {}", file_content.path().display(), error)
             }
         }
