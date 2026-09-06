@@ -9,8 +9,18 @@ pub(crate) enum Content {
 }
 
 pub(crate) struct FileContent {
-    pub path: PathBuf,
-    pub content: Content,
+    path: PathBuf,
+    content: Content,
+}
+
+impl FileContent {
+    pub(crate) fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub(crate) fn content(&self) -> &Content {
+        &self.content
+    }
 }
 
 pub(crate) fn read_file_contents(files: &Vec<String>) -> Vec<FileContent> {

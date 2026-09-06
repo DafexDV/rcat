@@ -46,7 +46,7 @@ fn show_file_contents(file_contents: &Vec<FileContent>, options: ShowOptions) {
     // read
     let mut line_number = 0;
     for file_content in file_contents {
-        match &file_content.content {
+        match &file_content.content() {
             Content::Lines(lines) => {
                 for line in lines.iter() {
                     let mut modified_line: String = line.clone();
@@ -63,8 +63,7 @@ fn show_file_contents(file_contents: &Vec<FileContent>, options: ShowOptions) {
                 }
             }
             Content::Error(error) => {
-                let path_str = file_content.path.to_str().expect("Failed to get path str");
-                println!("rcat: {}: {}", path_str, error)
+                println!("rcat: {}: {}", file_content.path().display(), error)
             }
         }
     }
